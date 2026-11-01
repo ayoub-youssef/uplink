@@ -13,8 +13,6 @@
 namespace uplink {
     const CHANNEL = "hub"
     const PROTOCOL = "HUB1"
-    const LINE = "~"
-    const WAIT_MS = 4000
 
     let started = false
     let earning = false
@@ -22,9 +20,8 @@ namespace uplink {
     let score = 0
     let level = "N/A"
     let tier = 1
-    let summary_text = ""
-    let summary_received = false
     let run_sent = false
+    let exempt = false
     let sent_signature = ""
 
     // Event counts for this run. Keys are the names created in the Hub form;
@@ -87,32 +84,6 @@ namespace uplink {
         return current == index ? out : ""
     }
 
-    function summary_body(text: string): string {
-        let separators = 0
-        let body = false
-        let out = ""
-        for (let i = 0; i < text.length; i++) {
-            const code = text.charCodeAt(i)
-            if (!body) {
-                if (code == 124) {
-                    separators += 1
-                    if (separators == 4) body = true
-                }
-            } else {
-                out += String.fromCharCode(code)
-            }
-        }
-        return out
-    }
-
-    function replace(text: string, from: string, to: string): string {
-        let out = ""
-        for (let i = 0; i < text.length; i++) {
-            out += text.charAt(i) == from ? to : text.charAt(i)
-        }
-        return out
-    }
-
     function on_message(buffer: Buffer) {
         const text = buffer_text(buffer)
         if (field(text, 0) != PROTOCOL) return
@@ -123,9 +94,6 @@ namespace uplink {
             if (!level) level = "N/A"
             tier = parseInt(field(text, 5)) || 1
             session_received = true
-        } else if (action == "SUMMARY") {
-            summary_text = replace(summary_body(text), LINE, "\n")
-            summary_received = true
         }
     }
 
@@ -139,7 +107,8 @@ namespace uplink {
     }
 
     function send(action: string) {
-        const run = ",\"run\":{\"score\":" + score + ",\"events\":" + json_events() + "}"
+        const run = ",\"run\":{\"score\":" + score + ",\"events\":" + json_events() +
+            ",\"exempt\":" + (exempt ? "true" : "false") + "}"
         control.simmessages.send(CHANNEL, Buffer.fromUTF8(
             "{\"v\":1,\"action\":\"" + action + "\"" +
             (action == "run" || action == "progress" ? run : "") + "}"))
@@ -161,18 +130,6 @@ namespace uplink {
         if (run_sent) return
         run_sent = true
         send("run")
-        control.runInParallel(function () {
-            let waited = 0
-            while (!summary_received && waited < WAIT_MS) {
-                pause(100)
-                waited += 100
-            }
-            send("summary_shown")
-            if (summary_received) game.showLongText(summary_text, DialogLayout.Full)
-            else game.showLongText("RUN COMPLETE\n\nOpen this game from The Hub to earn Data.",
-                DialogLayout.Full)
-            send("summary_seen")
-        })
     }
 
     /**
@@ -191,6 +148,19 @@ namespace uplink {
         game.onUpdate(function () {
             report_progress()
         })
+    }
+
+    /**
+     * Marks this run as exempt from the game's daily limit. Use it while the
+     * player is still in a menu or otherwise has not really started; a run with
+     * no gameplay should not spend one of their Data attempts. Exempt is false
+     * by default, so a game that never calls this block counts normally.
+     */
+    //% block="set this run exempt from the daily limit to $value"
+    //% value.defl=false
+    //% weight=85
+    export function setExempt(value: boolean) {
+        exempt = value
     }
 
     /**

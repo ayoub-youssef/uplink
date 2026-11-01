@@ -40,6 +40,9 @@ Then use the **Uplink** blocks:
 - `record event [catch-bull] by [1]` for multiple occurrences.
 - `the belt` / `the belt tier` for belt-specific content.
 - `is this a Data run` when the game needs to know whether Data is live.
+- `set this run exempt from the daily limit to [true]` while the player is
+  still in a menu or has not started real gameplay. Exempt runs record their
+  score/events but do not spend a Data attempt or pay Data. Default is false.
 
 The extension reports keys and counts only. The Hub looks up the reward and
 caps the count server-side; a modified game cannot choose its payout.
