@@ -1,0 +1,8 @@
+{
+  "name": "uplink",
+  "version": "0.1.0",
+  "description": "Uplink: report named events, score and belt to The Hub.",
+  "files": ["uplink.ts"],
+  "target": "arcade",
+  "dependencies": {}
+}

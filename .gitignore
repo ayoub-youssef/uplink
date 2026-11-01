@@ -1,0 +1,4 @@
+pxt_modules/
+built/
+.mkcd
+*.hex
