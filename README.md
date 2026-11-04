@@ -29,7 +29,7 @@ the game carries the **Blockchain** tag.
 Add this repository as a MakeCode extension:
 
 ```text
-https://github.com/ayoub-youssef/uplink
+https://github.com/the-hub-nexus/uplink
 ```
 
 Then use the **Uplink** blocks:
